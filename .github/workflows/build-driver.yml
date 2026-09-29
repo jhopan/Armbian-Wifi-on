@@ -25,7 +25,7 @@ jobs:
       - name: Define kernel versions
         id: kernels
         run: |
-          KERNELS="6.1.188 6.6.157 6.12.107 6.18.51"
+          KERNELS="6.1.188 6.6.157 6.12.107"
           if [[ "${{ github.event.inputs.kernel_version }}" != "" && "${{ github.event.inputs.kernel_version }}" != "all" ]]; then
             KERNELS="${{ github.event.inputs.kernel_version }}"
           fi
