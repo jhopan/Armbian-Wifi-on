@@ -17,18 +17,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential bc wget curl git \
-            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
-            libncurses-dev flex bison libssl-dev \
-            qemu-user-static binfmt-support
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
 
       - name: Define kernel versions
         id: kernels
         run: |
-          # Daftar kernel yang ingin di-build
           KERNELS="6.1.188 6.6.157 6.12.107 6.18.51"
           if [[ "${{ github.event.inputs.kernel_version }}" != "" && "${{ github.event.inputs.kernel_version }}" != "all" ]]; then
             KERNELS="${{ github.event.inputs.kernel_version }}"
@@ -36,42 +32,38 @@ jobs:
           echo "kernel_list=${KERNELS}" >> $GITHUB_OUTPUT
           echo "Target kernels: $KERNELS"
 
-      - name: Download Kernel Headers
-        run: |
-          mkdir -p headers
-          for KVER in ${{ steps.kernels.outputs.kernel_list }}; do
-            echo "Downloading headers for $KVER..."
-            wget -q "https://github.com/ophub/kernel/releases/download/kernel_stable/deb-$KVER.tar.gz" -O "headers/deb-$KVER.tar.gz"
-            mkdir -p "headers/$KVER"
-            tar -xzf "headers/deb-$KVER.tar.gz" -C "headers/$KVER"
-            # cari file header deb (ophub pakai underscore dan akhiran arm64)
-            HEADER_DEB=$(find "headers/$KVER" -name "linux-headers_*.deb" | head -n 1)
-            echo "Found header deb: $HEADER_DEB"
-            mkdir -p "headers/$KVER/extracted"
-            dpkg -x "$HEADER_DEB" "headers/$KVER/extracted"
-          done
-
-      - name: Cross-Compile RTL8189FS Driver
-        run: |
-          # Register qemu-arm64 untuk jalanin binary ARM64 di x86_64
-          sudo update-binfmts --enable qemu-aarch64 || true
-          
-          mkdir -p output
-          for KVER in ${{ steps.kernels.outputs.kernel_list }}; do
-            echo "============================================"
-            echo "Building for kernel $KVER..."
-            echo "============================================"
-            KSRC=$(find "headers/$KVER/extracted/usr/src" -maxdepth 1 -type d -name "linux-headers-*" | head -n 1)
-            echo "Kernel source: $KSRC"
+      - name: Build drivers in ARM64 container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: arm64v8/ubuntu:22.04
+          options: -v ${{ github.workspace }}:/work -w /work
+          run: |
+            set -e
+            apt-get update
+            apt-get install -y build-essential bc wget curl git
             
-            make clean || true
-            make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- KSRC="$KSRC" HOSTCC=gcc HOSTCXX=g++
-            
-            # Simpan hasil compile
-            cp 8189fs.ko "output/8189fs-$KVER.ko"
-            
-            echo "Build selesai untuk $KVER"
-          done
+            mkdir -p output
+            for KVER in ${{ steps.kernels.outputs.kernel_list }}; do
+              echo "============================================"
+              echo "Building for kernel $KVER..."
+              echo "============================================"
+              
+              cd /tmp
+              wget -q "https://github.com/ophub/kernel/releases/download/kernel_stable/deb-$KVER.tar.gz" -O "deb-$KVER.tar.gz"
+              tar -xzf "deb-$KVER.tar.gz"
+              HEADER_DEB=$(find . -name "linux-headers_*.deb" | head -n 1)
+              echo "Found header deb: $HEADER_DEB"
+              dpkg -x "$HEADER_DEB" /tmp/extracted
+              KSRC=$(find /tmp/extracted/usr/src -maxdepth 1 -type d -name "linux-headers-*" | head -n 1)
+              echo "Kernel source: $KSRC"
+              
+              cd /work
+              make clean || true
+              make -j4 ARCH=arm64 KSRC="$KSRC"
+              cp 8189fs.ko "output/8189fs-$KVER.ko"
+              rm -rf /tmp/*
+              echo "Build selesai untuk $KVER"
+            done
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
