@@ -7,6 +7,14 @@
 
 Repository ini berisi panduan lengkap, script otomatis, dan source code driver untuk mengaktifkan **WiFi Internal Realtek RTL8189FS** pada STB Amlogic S905X (B860H / HG680P) yang menjalankan Armbian dengan kernel modern.
 
+### ✅ Tested & Working on 3 Devices
+
+| Device | RAM | Kernel | Status |
+|--------|-----|--------|--------|
+| **ZTE B860H V1** | 1GB | 6.12.107-ophub | ✅ WiFi ON |
+| **ZTE B860H V2** | 2GB | 6.6.193-ophub | ✅ WiFi ON |
+| **FiberHome HG680P** | - | 6.12.107-ophub | ✅ WiFi ON |
+
 ---
 
 ## ⚡ Cara Paling Cepat (One-Liner)

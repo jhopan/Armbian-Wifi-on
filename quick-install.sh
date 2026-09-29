@@ -47,7 +47,7 @@ if [[ "${HTTP_CODE}" == "200" ]]; then
     echo "Atau dengan nmcli:"
     echo "  nmcli device wifi connect \"NAMA_WIFI\" password \"PASSWORD_WIFI\" ifname wlan0"
     echo ""
-    echo "Repo: https://github.com/jhopan/Armbian  Wifi-on"
+    echo "Repo: https://github.com/jhopan/Armbian-Wifi-on"
 else
     echo "❌ Tidak ada prebuilt untuk kernel ${KVER}."
     echo ""
