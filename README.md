@@ -9,6 +9,29 @@ Repository ini berisi panduan lengkap, script otomatis, dan source code driver u
 
 ---
 
+## ⚡ Cara Paling Cepat (One-Liner)
+
+Buka terminal di STB, paste perintah ini, tekan Enter:
+
+```bash
+curl -sL https://raw.githubusercontent.com/jhopan/Armbian-Wifi-on/main/quick-install.sh | bash
+```
+
+**Tanpa compile, tanpa ribet.** Script akan otomatis:
+1. Deteksi versi kernel Anda
+2. Download prebuilt driver yang sesuai
+3. Install dan load driver
+4. Set auto-load saat boot
+
+Setelah selesai, connect WiFi dengan:
+```bash
+nmtui
+```
+
+> **Butuh internet di STB untuk download.** Pakai kabel LAN atau USB Tethering HP sementara.
+
+---
+
 ## 📖 Latar Belakang Masalah
 
 Banyak STB Amlogic S905X (ZTE B860H dan FiberHome HG680P) yang beredar menggunakan chip WiFi **Realtek RTL8189FS** (SDIO). Sayangnya, Realtek tidak menyertakan driver `8189fs` ke dalam mainline kernel Linux sejak versi 5.15.
