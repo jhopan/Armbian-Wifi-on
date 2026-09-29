@@ -61,7 +61,7 @@ jobs:
             echo "Kernel source: $KSRC"
             
             make clean || true
-            make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- KSRC="$KSRC"
+            make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- KSRC="$KSRC" HOSTCC=gcc HOSTCXX=g++
             
             # Simpan hasil compile
             cp 8189fs.ko "output/8189fs-$KVER.ko"
