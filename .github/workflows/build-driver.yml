@@ -56,8 +56,8 @@ jobs:
               
               cd /work
               make clean || true
-              make -j4 ARCH=arm64 KSRC="$KSRC"
-              cp 8189fs.ko "output/8189fs-$KVER.ko"
+              make -j4 ARCH=arm64 KSRC="$KSRC" modules
+              cp 8189fs.ko "output/8189fs-$KVER.ko" 2>/dev/null || echo "8189fs.ko not found after build!"
               rm -rf /tmp/*
               echo "Build selesai untuk $KVER"
             done
