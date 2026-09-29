@@ -1,0 +1,76 @@
+name: 🏗️ Build RTL8189FS Drivers
+
+on:
+  workflow_dispatch:
+    inputs:
+      kernel_version:
+        description: 'Kernel versi yang ingin di-build (contoh: 6.12.107)'
+        required: false
+        default: 'all'
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bc wget curl git \
+            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+            libncurses-dev flex bison libssl-dev
+
+      - name: Define kernel versions
+        id: kernels
+        run: |
+          # Daftar kernel yang ingin di-build
+          KERNELS="6.1.188 6.6.157 6.12.107 6.18.51"
+          if [[ "${{ github.event.inputs.kernel_version }}" != "" && "${{ github.event.inputs.kernel_version }}" != "all" ]]; then
+            KERNELS="${{ github.event.inputs.kernel_version }}"
+          fi
+          echo "kernel_list=${KERNELS}" >> $GITHUB_OUTPUT
+          echo "Target kernels: $KERNELS"
+
+      - name: Download Kernel Headers
+        run: |
+          mkdir -p headers
+          for KVER in ${{ steps.kernels.outputs.kernel_list }}; do
+            echo "Downloading headers for $KVER..."
+            wget -q "https://github.com/ophub/kernel/releases/download/kernel_stable/deb-$KVER.tar.gz" -O "headers/deb-$KVER.tar.gz"
+            mkdir -p "headers/$KVER"
+            tar -xzf "headers/deb-$KVER.tar.gz" -C "headers/$KVER"
+            # cari file header deb
+            HEADER_DEB=$(find "headers/$KVER" -name "linux-headers-*.deb" | head -n 1)
+            echo "Found header deb: $HEADER_DEB"
+            dpkg -x "$HEADER_DEB" "headers/$KVER/extracted"
+          done
+
+      - name: Cross-Compile RTL8189FS Driver
+        run: |
+          mkdir -p output
+          for KVER in ${{ steps.kernels.outputs.kernel_list }}; do
+            echo "============================================"
+            echo "Building for kernel $KVER..."
+            echo "============================================"
+            KSRC=$(find "headers/$KVER/extracted" -type d -name "linux-headers-*-ophub" | head -n 1)
+            echo "Kernel source: $KSRC"
+            
+            make clean || true
+            make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- KSRC="$KSRC"
+            
+            # Simpan hasil compile
+            cp 8189fs.ko "output/8189fs-$KVER.ko"
+            
+            echo "Build selesai untuk $KVER"
+          done
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: prebuilt-drivers
+          path: output/*.ko
+          retention-days: 90
