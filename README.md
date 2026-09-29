@@ -33,10 +33,10 @@ Banyak yang percaya masalah WiFi bisa diselesaikan dengan **memodifikasi Device 
 |--------|----------------|------|--------|
 | **5.10.y** | ✅ Built-in | Driver sudah ada di kernel staging | 🟢 Instan |
 | **5.15.y** | ⚠️ Hilang dari mainline | Compile sendiri | 🟡 Bisa |
-| **6.1.y** | ⚠️ Hilang dari mainline | Compile sendiri | 🟡 Bisa |
-| **6.6.y** | ⚠️ Hilang dari mainline | Compile sendiri | 🟡 Bisa |
-| **6.12.y** | ⚠️ Hilang dari mainline | Compile sendiri | 🟡 Bisa (tested!) |
-| **6.18.y** | ⚠️ Belum teruji | Compile sendiri | 🔴 Belum ada laporan |
+| **6.1.y** | ⚠️ Hilang dari mainline | [Prebuilt](releases) atau compile | 🟡 Bisa |
+| **6.6.y** | ⚠️ Hilang dari mainline | [Prebuilt](releases) atau compile | 🟡 Bisa |
+| **6.12.y** | ⚠️ Hilang dari mainline | [Prebuilt](releases) atau compile | 🟡 Bisa (tested!) |
+| **6.18.y** | ❌ API breaking changes | Tidak didukung | 🔴 Error |
 
 ### Kenapa Kernel 5.10 Itu Spesial?
 Kernel 5.10 adalah **LTS (Long Term Support)** dan driver `8189fs` masih masuk di staging kernel pada era 5.x. Setelah kernel 5.15, Realtek menarik driver ini dari mainline karena dianggap "code quality rendah". Jadi setiap update kernel ke 6.x, driver hilang dan harus di-compile ulang.
