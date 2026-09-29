@@ -33,11 +33,8 @@ jobs:
           echo "Target kernels: $KERNELS"
 
       - name: Build drivers in ARM64 container
-        uses: addnab/docker-run-action@v3
-        with:
-          image: arm64v8/ubuntu:22.04
-          options: -v ${{ github.workspace }}:/work -w /work
-          run: |
+        run: |
+          docker run --rm --platform linux/arm64 -v ${{ github.workspace }}:/work -w /work arm64v8/ubuntu:22.04 bash -c '
             set -e
             apt-get update
             apt-get install -y build-essential bc wget curl git
@@ -64,6 +61,7 @@ jobs:
               rm -rf /tmp/*
               echo "Build selesai untuk $KVER"
             done
+          '
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
