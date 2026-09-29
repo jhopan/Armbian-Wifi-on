@@ -43,9 +43,10 @@ jobs:
             wget -q "https://github.com/ophub/kernel/releases/download/kernel_stable/deb-$KVER.tar.gz" -O "headers/deb-$KVER.tar.gz"
             mkdir -p "headers/$KVER"
             tar -xzf "headers/deb-$KVER.tar.gz" -C "headers/$KVER"
-            # cari file header deb
-            HEADER_DEB=$(find "headers/$KVER" -name "linux-headers-*.deb" | head -n 1)
+            # cari file header deb (ophub pakai underscore dan akhiran arm64)
+            HEADER_DEB=$(find "headers/$KVER" -name "linux-headers_*.deb" | head -n 1)
             echo "Found header deb: $HEADER_DEB"
+            mkdir -p "headers/$KVER/extracted"
             dpkg -x "$HEADER_DEB" "headers/$KVER/extracted"
           done
 
@@ -56,7 +57,7 @@ jobs:
             echo "============================================"
             echo "Building for kernel $KVER..."
             echo "============================================"
-            KSRC=$(find "headers/$KVER/extracted" -type d -name "linux-headers-*-ophub" | head -n 1)
+            KSRC=$(find "headers/$KVER/extracted/usr/src" -maxdepth 1 -type d -name "linux-headers-*" | head -n 1)
             echo "Kernel source: $KSRC"
             
             make clean || true
