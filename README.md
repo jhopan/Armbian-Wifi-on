@@ -1,9 +1,11 @@
 # 🛜 Armbian WiFi-ON untuk B860H / HG680P (Amlogic S905X)
 
 [![License](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](LICENSE)
-[![Kernel](https://img.shields.io/badge/Linux%20Kernel-5.10%20%7C%205.15%20%7C%206.1%20%7C%206.6%20%7C%206.12%20%7C%206.18-green.svg)]()
+[![Kernel](https://img.shields.io/badge/Linux%20Kernel-5.10%20%7C%205.15%20%7C%206.1%20%7C%206.6%20%7C%206.12-green.svg)]()
+[![Distro](https://img.shields.io/badge/Distro-Armbian%20Trixie%20%7C%20Bookworm%20%7C%20Noble-blue.svg)]()
 [![Hardware](https://img.shields.io/badge/Hardware-ZTE%20B860H%20%7C%20FiberHome%20HG680P-orange.svg)]()
 [![Chip](https://img.shields.io/badge/WiFi%20Chip-Realtek%20RTL8189FS%20(SDIO)-red.svg)]()
+[![Status](https://img.shields.io/badge/Status-Tested%20on%203%20Devices-brightgreen.svg)]()
 
 Repository ini berisi panduan lengkap, script otomatis, dan source code driver untuk mengaktifkan **WiFi Internal Realtek RTL8189FS** pada STB Amlogic S905X (B860H / HG680P) yang menjalankan Armbian dengan kernel modern.
 
@@ -71,8 +73,44 @@ Banyak yang percaya masalah WiFi bisa diselesaikan dengan **memodifikasi Device 
 | **6.12.y** | ⚠️ Hilang dari mainline | [Prebuilt](releases) atau compile | 🟡 Bisa (tested!) |
 | **6.18.y** | ❌ API breaking changes | Tidak didukung | 🔴 Error |
 
+### ❌ Kenapa Kernel 6.18 Tidak Didukung?
+Kernel 6.18 mengubah 15+ API di subsistem `cfg80211` (WiFi). Parameter fungsi callback berubah dari `struct net_device *` menjadi `struct wireless_dev *`. Ini **breaking change** yang tidak dapat diatasi tanpa modifikasi source code driver secara mendalam.
+
+### ✅ Metode Utama yang Berhasil
+
+Metode yang terbukti berhasil dan stabil di 3 device:
+
+1. **Install Armbian Trixie** (kernel 6.12.107-ophub) dari ophub
+2. **Pilih board yang sesuai** saat first boot (`b860h` atau `hg680p`)
+3. **Jangan ganti DTB** — DTB bawaan ophub sudah mengaktifkan jalur SDIO
+4. **Download prebuilt driver** dari Release v1.0.0 (atau jalankan one-liner)
+5. **Install driver** → `modprobe 8189fs` → `wlan0` muncul
+6. **Connect WiFi** via `nmtui` atau `nmcli`
+
+**Inti solusi:** Masalah WiFi bukan di DTB, bukan di kernel, tapi di ** hilangnya driver `8189fs` dari mainline kernel**. Solusinya adalah compile dan install driver out-of-tree.
+
 ### Kenapa Kernel 5.10 Itu Spesial?
 Kernel 5.10 adalah **LTS (Long Term Support)** dan driver `8189fs` masih masuk di staging kernel pada era 5.x. Setelah kernel 5.15, Realtek menarik driver ini dari mainline karena dianggap "code quality rendah". Jadi setiap update kernel ke 6.x, driver hilang dan harus di-compile ulang.
+
+### 🏆 Konfigurasi yang Disarankan (Recommended Setup)
+
+Untuk hasil paling stabil, disarankan menggunakan kombinasi berikut:
+
+| Komponen | Rekomendasi | Alasan |
+|----------|-------------|--------|
+| **Distro** | Armbian Trixie (Debian 13) | Kernel LTS 6.12, paket modern, stabil |
+| **Kernel** | 6.12.107-ophub | Tested di 3 device, prebuilt driver tersedia |
+| **STB** | B860H / HG680P (Amlogic S905X) | Sesuai target repo |
+| **Chip WiFi** | Realtek RTL8189FS (Pantat Hitam) | `SDIO_ID=024C:F179` |
+| **Driver** | `8189fs.ko` (dari Release) | Stabil, tidak perlu compile |
+
+### 📦 Distro yang Didukung
+
+| Distro | Kernel | Status | Catatan |
+|--------|--------|--------|--------|
+| **Armbian Trixie** (Debian 13) | 6.12.y | ✅ Tested & Working | Rekomendasi utama |
+| **Armbian Bookworm** (Debian 12) | 6.1.y / 6.6.y | ✅ Didukung | Stabil, cocok untuk 1GB RAM |
+| **Armbian Noble** (Ubuntu 24.04) | 6.6.y / 6.12.y | ✅ Didukung | Boros RAM, tidak disarankan untuk 1GB |
 
 ---
 
@@ -378,14 +416,14 @@ make clean
 
 ## ❓ FAQ
 
-**Q: Apakah perlu ganti/modify DTB?**
+**Q: Apakah perlu ganti/modifikasi DTB?**
 A: TIDAK. DTB bawaan ophub sudah benar. Jalur SDIO sudah aktif. Masalahnya 100% di driver.
 
 **Q: Apakah bisa pakai kernel 6.18?**
-A: Belum ada yang test. Silakan coba dan lapor hasilnya.
+A: TIDAK. Kernel 6.18 mengubah 15+ API di `cfg80211` (`net_device` → `wireless_dev`). Driver ini belum support. Gunakan kernel 6.12.
 
-**Q: Apakah work di Trixie (Debian 13)?**
-A: YA. Sudah ditest di kernel 6.12.107-ophub dengan Armbian Trixie.
+**Q: Apakah work di Armbian Trixie (Debian 13)?**
+A: YA. Sudah ditest di kernel 6.12.107-ophub dengan Armbian Trixie. Ini konfigurasi yang disarankan.
 
 **Q: Kenapa WiFi saya ada dua (wlan0 dan wlan1)?**
 A: Itu fitur Concurrent Mode dari driver Realtek. Normal. Pakai wlan0 saja.
@@ -393,8 +431,20 @@ A: Itu fitur Concurrent Mode dari driver Realtek. Normal. Pakai wlan0 saja.
 **Q: Bagaimana jika chip saya bukan RTL8189FS?**
 A: Cek dengan `cat /sys/bus/sdio/devices/mmc0:0001:1/uevent`. Jika bukan `SDIO_ID=024C:F179`, driver ini tidak cocok.
 
+**Q: Kernel 6.6.193-ophub juga tested?**
+A: YA. B860H V2 2GB RAM dengan kernel 6.6.193-ophub juga sudah berhasil WiFi ON.
+
 **Q: Apakah perlu downgrade kernel?**
-A: TIDAK. Driver ini bisa di-compile di kernel 6.12 tanpa downgrade.
+A: TIDAK. Driver bisa di-compile atau di-install prebuilt di kernel 6.12 tanpa downgrade.
+
+**Q: Saya punya 1GB RAM, apakah bisa compile?**
+A: Bisa, tapi disarankan pakai prebuilt driver dari Release v1.0.0. Tanpa compile, hemat RAM dan waktu.
+
+**Q: Apakah driver bertahan setelah reboot?**
+A: YA. Script otomatis membuat file `/etc/modules-load.d/8189fs.conf` yang memuat driver saat boot.
+
+**Q: Bagaimana setelah update kernel?**
+A: Driver harus di-install ulang. Jalankan lagi one-liner atau compile ulang.
 
 ---
 
@@ -402,13 +452,28 @@ A: TIDAK. Driver ini bisa di-compile di kernel 6.12 tanpa downgrade.
 
 Proyek ini disusun berdasarkan pengalaman langsung dan trial-and-error. Terima kasih kepada:
 
-- **JhopanStore** - Eksplorasi, dokumentasi, pengujian langsung pada device B860H (kernel 6.12.107-ophub, Armbian Trixie).
-- **[gustiarto/rtl8189fs-armbian](https://github.com/gustiarto/rtl8189fs-armbian)** - Repository source code driver RTL8189FS yang sudah di-patch untuk kernel modern (6.1.y / 6.12.y).
+### 🧪 Tester
+- **JhopanStore** - Pengujian langsung di 3 device:
+  - ZTE B860H V1 (1GB RAM) - Kernel 6.12.107-ophub - Armbian Trixie ✅
+  - ZTE B860H V2 (2GB RAM) - Kernel 6.6.193-ophub - Armbian Trixie ✅
+  - FiberHome HG680P - Kernel 6.12.107-ophub - Armbian Trixie ✅
+
+### 📚 Driver Source Code
+- **[jwrdegoede/rtl8189ES_linux](https://github.com/jwrdegoede/rtl8189ES_linux)** - Source code asli driver RTL8189FS (branch `rtl8189fs`).
+- **[gustiarto/rtl8189fs-armbian](https://github.com/gustiarto/rtl8189fs-armbian)** - Repository source code driver RTL8189FS yang di-patch untuk kernel 6.1.y / 6.12.y.
 - **[alive4ever/rtl8189fs-armbian-current-meson64](https://github.com/alive4ever/rtl8189fs-armbian-current-meson64)** - Referensi DKMS untuk kernel 6.12.
-- **[jwrdegoede/rtl8189ES_linux](https://github.com/jwrdegoede/rtl8189ES_linux)** - Source code asli driver RTL8189FS (branch rtl8189fs).
+
+### 🖥️ Armbian & Kernel
 - **[ophub/amlogic-s9xxx-armbian](https://github.com/ophub/amlogic-s9xxx-armbian)** - Image Armbian dan kernel packages untuk Amlogic S905X.
-- **[hafidhh/B860H-HG680P-Armbian](https://github.com/hafidhh/B860H-HG680P-Armbian)** - Referensi awal mengenai konfigurasi DTB B860H/HG680P.
+
+### 🔧 Referensi DTB & Hardware
+- **[hafidhh/B860H-HG680P-Armbian](https://github.com/hafidhh/B860H-HG680P-Armbian)** - Referensi awal konfigurasi DTB B860H/HG680P.
 - **[Rureka](https://rureka.com/mengaktifkan-wifii-internal-manjaro-di-amlogic-s905x-stb-fiberhome-hg680p/)** - Referensi identifikasi varian pantat hitam vs putih.
+
+### 📖 Referensi Tambahan
+- **[Armbian Official - aml-s9xx-box](https://armbian.com/boards/aml-s9xx-box)** - Board support resmi.
+- **[mregha/Armbian-Wifi](https://github.com/mregha/Armbian-Wifi)** - Referensi alternatif (wlan-black.deb, sudah deprecated).
+- **[FarelRA - Revive Dead eMMC](https://gist.github.com/FarelRA/2d5bc9e23d2e718f1f30247b74638c32)** - Referensi install Armbian di B860H/HG680P.
 
 ---
 
@@ -423,5 +488,7 @@ Source code driver Realtek RTL8189FS adalah hak milik Realtek dan dilisensikan d
 Jika Anda berhasil (atau gagal) di kernel/konfigurasi lain, silakan buat Issue atau Pull Request. Informasi Anda akan sangat membantu pengguna STB lainnya.
 
 **Tested & Working:**
-- ZTE B860H 2GB RAM (Pantat Hitam) - Kernel 6.12.107-ophub - Armbian Trixie
+- ZTE B860H V1 (1GB RAM) - Kernel 6.12.107-ophub - Armbian Trixie ✅
+- ZTE B860H V2 (2GB RAM) - Kernel 6.6.193-ophub - Armbian Trixie ✅
+- FiberHome HG680P - Kernel 6.12.107-ophub - Armbian Trixie ✅
 - Chip: Realtek RTL8189FS (SDIO_ID=024C:F179)
