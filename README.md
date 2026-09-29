@@ -9,11 +9,13 @@ Repository ini berisi panduan lengkap, script otomatis, dan source code driver u
 
 ### ✅ Tested & Working on 3 Devices
 
-| Device | RAM | Kernel | Status |
-|--------|-----|--------|--------|
-| **ZTE B860H V1** | 1GB | 6.12.107-ophub | ✅ WiFi ON |
-| **ZTE B860H V2** | 2GB | 6.6.193-ophub | ✅ WiFi ON |
-| **FiberHome HG680P** | - | 6.12.107-ophub | ✅ WiFi ON |
+| Device | RAM | Kernel | Driver | Status |
+|--------|-----|--------|--------|--------|
+| **ZTE B860H V1** | 1GB | 6.12.107-ophub | `8189fs.ko` (dari STB) | ✅ WiFi ON |
+| **ZTE B860H V2** | 2GB | 6.12.193-ophub | `8189fs.ko` (dari STB) | ✅ WiFi ON |
+| **FiberHome HG680P** | - | 6.12.107-ophub | `8189fs.ko` (dari STB) | ✅ WiFi ON |
+
+> ⭐ Driver `8189fs.ko` diambil langsung dari STB yang sudah berhasil WiFi ON. Inilah driver yang paling stabil dan sudah teruji di 3 device.
 
 ---
 
