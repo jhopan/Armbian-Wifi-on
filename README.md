@@ -1,4 +1,9 @@
-# 🛜 Armbian WiFi-ON untuk B860H / HG680P (Amlogic S905X)
+<div align="center">
+
+# 🛜 Armbian WiFi-ON untuk B860H / HG680P
+
+### Driver WiFi Realtek RTL8189FS untuk Armbian Kernel Modern
+### Tested on 3 Devices: B860H V1 (1GB) · B860H V2 (2GB) · HG680P
 
 [![License](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](LICENSE)
 [![Kernel](https://img.shields.io/badge/Linux%20Kernel-5.10%20%7C%205.15%20%7C%206.1%20%7C%206.6%20%7C%206.12-green.svg)]()
@@ -6,6 +11,14 @@
 [![Hardware](https://img.shields.io/badge/Hardware-ZTE%20B860H%20%7C%20FiberHome%20HG680P-orange.svg)]()
 [![Chip](https://img.shields.io/badge/WiFi%20Chip-Realtek%20RTL8189FS%20(SDIO)-red.svg)]()
 [![Status](https://img.shields.io/badge/Status-Tested%20on%203%20Devices-brightgreen.svg)]()
+
+### ⚡ One command. WiFi ON. Tanpa compile, tanpa ribet.
+
+[Quick Install](#-cara-paling-cepat-one-liner) · [Prebuilt Drivers](releases) · [Ready-to-Flash Image](https://github.com/jhopan/Armbian-Trixie-WifiON) · [Report Issue](issues)
+
+</div>
+
+---
 
 Repository ini berisi panduan lengkap, script otomatis, dan source code driver untuk mengaktifkan **WiFi Internal Realtek RTL8189FS** pada STB Amlogic S905X (B860H / HG680P) yang menjalankan Armbian dengan kernel modern.
 
